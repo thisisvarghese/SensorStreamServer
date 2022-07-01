@@ -7,6 +7,18 @@ from base64 import b64decode
 import wave
 import json
 
+import time
+import os
+
+from azure.eventhub.aio import EventHubProducerClient
+from azure.eventhub.exceptions import EventHubError
+from azure.eventhub import EventData
+
+CONNECTION_STR = 'Endpoint=sb://sensorhub.servicebus.windows.net/;SharedAccessKeyName=SendToEventHub;SharedAccessKey=+CJiJAnpZMhkfzM05RdW5XjGUOfE+rDIgKR8l/oxnCU=;EntityPath=edgedeviceevents'
+EVENTHUB_NAME = 'edgedeviceevents'
+
+
+
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -30,6 +42,12 @@ print(
 
 
 async def echo(websocket, path):
+    
+
+    
+    
+
+    
     async for message in websocket:
         if path == '/accelerometer':
             data = await websocket.recv()
@@ -73,6 +91,28 @@ async def echo(websocket, path):
             print(data)
             f = open("lightsensor.txt", "a")
             f.write(data+"\n")
+            
+            producer = EventHubProducerClient.from_connection_string(
+            conn_str="Endpoint=sb://sensorhub.servicebus.windows.net/;SharedAccessKeyName=SendToEventHub;SharedAccessKey=+CJiJAnpZMhkfzM05RdW5XjGUOfE+rDIgKR8l/oxnCU=;EntityPath=edgedeviceevents",
+            eventhub_name="edgedeviceevents")
+        
+            to_send_message_cnt = 1
+            event_data_batch = await producer.create_batch()
+            for i in range(to_send_message_cnt):
+                event_data = EventData(data)
+                try:
+                    event_data_batch.add(event_data)
+                    print("event added in batch")
+                except ValueError:
+                    await producer.send_batch(event_data_batch)
+                    event_data_batch = await producer.create_batch()
+                    event_data_batch.add(event_data)
+                    print("Event Sent to EH")
+            if len(event_data_batch) > 0:
+                await producer.send_batch(event_data_batch)
+                print("Event Sent to EH if len>0")
+
+
 
         if path == '/proximity':
             data = await websocket.recv()
