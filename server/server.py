@@ -107,10 +107,13 @@ async def echo(websocket, path):
                     await producer.send_batch(event_data_batch)
                     event_data_batch = await producer.create_batch()
                     event_data_batch.add(event_data)
+                    await producer.close()
                     print("Event Sent to EH")
             if len(event_data_batch) > 0:
                 await producer.send_batch(event_data_batch)
+                await producer.close()
                 print("Event Sent to EH if len>0")
+                
 
 
 
