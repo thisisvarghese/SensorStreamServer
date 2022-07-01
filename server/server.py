@@ -89,8 +89,8 @@ async def echo(websocket, path):
             print("connected")
             data = await websocket.recv()
             print(data)
-            f = open("lightsensor.txt", "a")
-            f.write(data+"\n")
+           # f = open("lightsensor.txt", "a")
+           # f.write(data+"\n")
             
             producer = EventHubProducerClient.from_connection_string(
             conn_str="Endpoint=sb://sensorhub.servicebus.windows.net/;SharedAccessKeyName=SendToEventHub;SharedAccessKey=+CJiJAnpZMhkfzM05RdW5XjGUOfE+rDIgKR8l/oxnCU=;EntityPath=edgedeviceevents",
