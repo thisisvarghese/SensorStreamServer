@@ -14,10 +14,45 @@ from azure.eventhub.aio import EventHubProducerClient
 from azure.eventhub.exceptions import EventHubError
 from azure.eventhub import EventData
 
+#import imageio
+
+from PIL import Image
+
+import numpy as np
+
+
+from imutils.object_detection import non_max_suppression
+
+import imutils
+import cv2
+
+# Opencv pre-trained SVM with HOG people features 
+HOGCV = cv2.HOGDescriptor()
+HOGCV.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+
+
 CONNECTION_STR = 'Endpoint=sb://sensorhub.servicebus.windows.net/;SharedAccessKeyName=SendToEventHub;SharedAccessKey=+CJiJAnpZMhkfzM05RdW5XjGUOfE+rDIgKR8l/oxnCU=;EntityPath=edgedeviceevents'
 EVENTHUB_NAME = 'edgedeviceevents'
 
 
+
+def detector(image):
+    '''
+    @image is a numpy array
+    '''
+
+    image = imutils.resize(image, width=min(400, image.shape[1]))
+    clone = image.copy()
+
+    (rects, weights) = HOGCV.detectMultiScale(image, winStride=(8, 8),
+                                              padding=(32, 32), scale=1.05)
+
+    # Applies non-max supression from imutils package to kick-off overlapped
+    # boxes
+    rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+    result = non_max_suppression(rects, probs=None, overlapThresh=0.65)
+
+    return result
 
 
 def get_ip():
@@ -138,8 +173,17 @@ async def echo(websocket, path):
                 fh = open(str(parsed_response['Timestamp']) + ".png", "wb")
                 fh.write(b64decode(parsed_response['Base64Data']))
                 print("Wrote image with timestamp " +str(parsed_response['Timestamp']))
+                
+               # image = PIL.Image.open(data)
+                image_array = np.array(str(parsed_response['Timestamp']) + ".png")
+                print("Read the image for processing " +str(parsed_response['Timestamp']) + ".png")
+                #result = detector(image)
+                #print (result)
+                
+                 
             except Exception:
                 print('Connection closed due to error')
+                print(Exception)
                 await websocket.close()
 
         if path == '/audio':
