@@ -1,6 +1,7 @@
 import logging
 import asyncio
 from azure.eventhub.aio import EventHubConsumerClient
+from tkinter import messagebox
 
 connection_str = 'Endpoint=sb://sensorhub.servicebus.windows.net/;SharedAccessKeyName=sendreceive;SharedAccessKey=Qbk8hzxLB2TRmnczYnZmNTR/wvHiR5PZAhB8xacxc2U=;EntityPath=controlevents'
 consumer_group = '$Default'
@@ -12,6 +13,8 @@ logging.basicConfig(level=logging.INFO)
 async def on_event(partition_context, event):
     logger.info("Received event from partition {}".format(partition_context.partition_id))
     await partition_context.update_checkpoint(event)
+    print(event.message)#body_as_str()
+    #messagebox.showinfo('Ahem..Ahem',event.message)
 
 async def receive():
     client = EventHubConsumerClient.from_connection_string(connection_str, consumer_group, eventhub_name=eventhub_name)
