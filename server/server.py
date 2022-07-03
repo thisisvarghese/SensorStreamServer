@@ -70,6 +70,10 @@ def get_ip():
     return IP
 
 
+def buildPayload(sensor, timestamp, value, payload):
+    return {"SensorName": sensor,"Timestamp": timestamp,"Reading": value,"payload": payload}
+
+
 hostname = socket.gethostname()
 IPAddr = get_ip()
 print("Your Computer Name is: " + hostname)
@@ -179,6 +183,30 @@ async def echo(websocket, path):
                 print("Call the peoplecounter program")
                 (res,im) = peoplecounter.localDetect(str(parsed_response['Timestamp']) + ".png")
                 print(len(res))
+                data = json.dumps(buildPayload("PeopleCounter", str(parsed_response['Timestamp']), len(res), ""))
+                print(data)
+                
+                producer = EventHubProducerClient.from_connection_string(
+                conn_str="Endpoint=sb://sensorhub.servicebus.windows.net/;SharedAccessKeyName=SendToEventHub;SharedAccessKey=+CJiJAnpZMhkfzM05RdW5XjGUOfE+rDIgKR8l/oxnCU=;EntityPath=edgedeviceevents",
+                eventhub_name="edgedeviceevents")
+            
+                to_send_message_cnt = 1
+                event_data_batch = await producer.create_batch()
+                for i in range(to_send_message_cnt):
+                    event_data = EventData(data)
+                    try:
+                        event_data_batch.add(event_data)
+                        print("event added in batch")
+                    except ValueError:
+                        await producer.send_batch(event_data_batch)
+                        event_data_batch = await producer.create_batch()
+                        event_data_batch.add(event_data)
+                        await producer.close()
+                        print("Event Sent to EH")
+                if len(event_data_batch) > 0:
+                    await producer.send_batch(event_data_batch)
+                    await producer.close()
+                    print("Event Sent to EH if len>0")
                 
                 if os.path.exists(str(parsed_response['Timestamp']) + ".png"):
                     os.remove(str(parsed_response['Timestamp']) + ".png")
@@ -193,9 +221,9 @@ async def echo(websocket, path):
                 #print (result)
                 
                  
-            except Exception:
+            except Exception as e:
                 print('Connection closed due to error')
-                print(Exception)
+                print(e)
                 await websocket.close()
 
         if path == '/audio':
