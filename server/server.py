@@ -26,6 +26,8 @@ from imutils.object_detection import non_max_suppression
 import imutils
 import cv2
 
+import peoplecounter
+
 # Opencv pre-trained SVM with HOG people features 
 HOGCV = cv2.HOGDescriptor()
 HOGCV.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
@@ -174,9 +176,19 @@ async def echo(websocket, path):
                 fh.write(b64decode(parsed_response['Base64Data']))
                 print("Wrote image with timestamp " +str(parsed_response['Timestamp']))
                 
+                print("Call the peoplecounter program")
+                (res,im) = peoplecounter.localDetect(str(parsed_response['Timestamp']) + ".png")
+                print(len(res))
+                
+                if os.path.exists(str(parsed_response['Timestamp']) + ".png"):
+                    os.remove(str(parsed_response['Timestamp']) + ".png")
+                    
+                else:
+                    remove(str(parsed_response['Timestamp']) + ".png")
+        
                # image = PIL.Image.open(data)
-                image_array = np.array(str(parsed_response['Timestamp']) + ".png")
-                print("Read the image for processing " +str(parsed_response['Timestamp']) + ".png")
+                #image_array = np.array(str(parsed_response['Timestamp']) + ".png")
+                #print("Read the image for processing " +str(parsed_response['Timestamp']) + ".png")
                 #result = detector(image)
                 #print (result)
                 
