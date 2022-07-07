@@ -154,7 +154,7 @@ async def cameraDetect(token, device, variable, sample_time=5):
            
             
             producer = EventHubProducerClient.from_connection_string(
-            conn_str="Endpoint=sb://sensorhub.servicebus.windows.net/;SharedAccessKeyName=SendToEventHub;SharedAccessKey=+CJiJAnpZMhkfzM05RdW5XjGUOfE+rDIgKR8l/oxnCU=;EntityPath=edgedeviceevents",
+            conn_str="Endpoint=sb://sensorhubv3.servicebus.windows.net/;SharedAccessKeyName=sendreceive;SharedAccessKey=H3JyvGQ9ILufac7pIaN4JlFx5qgoXBbBEWv+zl2YGUk=;EntityPath=edgedeviceevents",
             eventhub_name="edgedeviceevents")
             
             to_send_message_cnt = 1
